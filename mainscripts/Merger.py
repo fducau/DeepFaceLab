@@ -131,7 +131,7 @@ def main (model_class_name=None,
                 alignments_ar_parallel = alignments[source_filename_stem + '_parallel']
 
                 alignments_ar.append ( (dflimg.get_source_landmarks(), filepath, source_filepath) )
-                alignments_ar_parallel.append(dflimg_src.get_source_landmarks())
+                alignments_ar_parallel.append((dflimg_src.get_source_landmarks(), ) )
 
                 if len(alignments_ar) > 1:
                     multiple_faces_detected = True
@@ -148,7 +148,7 @@ def main (model_class_name=None,
                         io.log_info (f"alignment {filepath.name} refers to {source_filepath.name} ")
                     io.log_info ("")
 
-                alignments[a_key] = [ [a[0], a[-1]] for a in a_ar]
+                alignments[a_key] = [a[0] for a in a_ar]
 
             if multiple_faces_detected:
                 io.log_info ("It is strongly recommended to process the faces separatelly.")
