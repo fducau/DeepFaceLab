@@ -97,11 +97,22 @@ def main (model_class_name=None,
                         filepath = Path(filepath)
                         yield filepath, DFLIMG.load(filepath)
 
+                def generator_src():
+                    for filepath in io.progress_bar_generator( pathex.get_image_paths(aligned_path), "Collecting SOURCE alignments"):
+                        filepath = filepath.replace('data_dst', 'data_src')
+                        filepath = Path(filepath)
+                        yield filepath, DFLIMG.load(filepath)
+                      
+
             alignments = {}
             multiple_faces_detected = False
 
-            for filepath, dflimg in generator():
+            for (filepath, dflimg), (filepath_src, dflimg_src) in zip(generator(), generator_src()):
                 if dflimg is None or not dflimg.has_data():
+                    io.log_err (f"{filepath.name} is not a dfl image file")
+                    continue
+
+                if dflimg_src is None or not dflimg_src.has_data():
                     io.log_err (f"{filepath.name} is not a dfl image file")
                     continue
 
@@ -114,9 +125,13 @@ def main (model_class_name=None,
 
                 if source_filename_stem not in alignments.keys():
                     alignments[ source_filename_stem ] = []
+                    alignments[ source_filename_stem + '_parallel']
 
                 alignments_ar = alignments[ source_filename_stem ]
-                alignments_ar.append ( (dflimg.get_source_landmarks(), filepath, source_filepath ) )
+                alignments_ar_parallel = alignments[source_filename_stem + '_parallel']
+
+                alignments_ar.append ( (dflimg.get_source_landmarks(), filepath, source_filepath) )
+                alignments_ar_parallel.append(dflimg_src.get_source_landmarks())
 
                 if len(alignments_ar) > 1:
                     multiple_faces_detected = True
@@ -133,7 +148,7 @@ def main (model_class_name=None,
                         io.log_info (f"alignment {filepath.name} refers to {source_filepath.name} ")
                     io.log_info ("")
 
-                alignments[a_key] = [ a[0] for a in a_ar]
+                alignments[a_key] = [ [a[0], a[-1]] for a in a_ar]
 
             if multiple_faces_detected:
                 io.log_info ("It is strongly recommended to process the faces separatelly.")
@@ -141,7 +156,9 @@ def main (model_class_name=None,
                 io.log_info ("")
 
             frames = [ InteractiveMergerSubprocessor.Frame( frame_info=FrameInfo(filepath=Path(p),
-                                                                     landmarks_list=alignments.get(Path(p).stem, None)
+                                                                     landmarks_list=alignments.get(Path(p).stem, None),
+                                                            parallel_frame_info=FrameInfo(filepath=Path(p),
+                                                                     landmarks_list=alignments.get(Path(p).stem + '_parallel', None),)
                                                                     )
                                               )
                        for p in input_path_image_paths ]
