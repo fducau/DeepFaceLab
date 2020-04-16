@@ -21,9 +21,11 @@ class InteractiveMergerSubprocessor(Subprocessor):
     class Frame(object):
         def __init__(self, prev_temporal_frame_infos=None,
                            frame_info=None,
+                           parallel_frame_info=None,
                            next_temporal_frame_infos=None):
             self.prev_temporal_frame_infos = prev_temporal_frame_infos
             self.frame_info = frame_info
+            self.parallel_frame_info = parallel_frame_info
             self.next_temporal_frame_infos = next_temporal_frame_infos
             self.output_filepath = None
             self.output_mask_filepath = None
